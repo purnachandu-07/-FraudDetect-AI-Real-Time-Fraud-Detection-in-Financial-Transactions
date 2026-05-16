@@ -1,6 +1,28 @@
-# 🔐 FraudDetect AI — Real-Time Fraud Detection System
+# 🔐 FraudDetectAI — Real-Time Fraud Detection System
 
 A full-stack, ML-powered fraud detection dashboard that scores financial transactions in real time using **XGBoost** and **Random Forest** models, with live WebSocket feeds, alert management, and an interactive React frontend.
+
+---
+
+## 📋 Table of Contents
+
+- [🚀 Tech Stack](#-tech-stack)
+- [✨ Features](#-features)
+- [📁 Project Structure](#-project-structure)
+- [⚙️ ML Features](#️-ml-features)
+- [🛠️ Quick Start](#️-quick-start)
+- [🔑 Default Credentials](#-default-credentials)
+- [📡 API Reference](#-api-reference)
+- [🖥️ Pages](#️-pages)
+- [🔒 Security Notes](#-security-notes)
+- [🧪 Running a Quick Test](#-running-a-quick-test)
+- [🚀 Deployment Notes](#-deployment-notes)
+- [📦 Backend Dependencies](#-backend-dependencies)
+- [📦 Frontend Dependencies](#-frontend-dependencies)
+- [🛟 Troubleshooting](#-troubleshooting)
+- [❓ FAQ](#-faq)
+- [🤝 Acknowledgements](#-acknowledgements)
+- [📄 License](#-license)
 
 ---
 
@@ -338,60 +360,72 @@ lucide-react ^0.395.0
 tailwindcss ^3.4.4
 vite ^5.3.1
 ```
-## Troubleshooting
-| Problem                                    | Likely Cause                                              | Solution                                                                  |
-| ------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Backend won't start                        | Port 8001 already in use                                  | Kill the existing process using the port and restart the backend          |
-| Frontend won't start                       | Port 5173 already in use                                  | Run frontend on another port using `npm run dev -- --port 5174`           |
-| ModuleNotFoundError on backend start       | Virtual environment not activated or dependencies missing | Activate the venv and run `pip install -r requirements.txt`               |
-| No module named 'xgboost'                  | XGBoost dependency not installed                          | Run `pip install xgboost==2.0.3` inside the virtual environment           |
-| ML models not found on startup             | `saved_models/` folder missing or empty                   | Delete the folder and restart — models retrain automatically              |
-| Training hangs for more than 5 minutes     | Large dataset or slow CPU                                 | Wait during first training; later startups skip retraining                |
-| 401 Unauthorized on API calls              | JWT token missing or expired                              | Log out and log in again to refresh the token                             |
-| Login fails with correct credentials       | Seed users not inserted properly                          | Ensure backend startup completed successfully so seed data runs           |
-| Live Feed shows no transactions            | WebSocket connection failed                               | Check browser console for WebSocket errors and confirm backend is running |
-| Dashboard statistics show zero             | No transaction data available                             | Simulate transactions from the dashboard/settings panel                   |
-| UNIQUE constraint failed: transactions     | Duplicate transaction ID insertion                        | Safe to ignore — duplicate prevention is working correctly                |
-| CORS error in browser console              | Frontend URL not allowed in backend                       | Add frontend URL to `allow_origins` inside `main.py`                      |
-| 422 Unprocessable Entity                   | API request body schema mismatch                          | Verify request payload using Swagger docs at `/docs`                      |
-| Vite build fails                           | Old Node.js version                                       | Upgrade to Node.js 18 or later                                            |
-| SQLite database locked                     | Multiple backend instances running                        | Stop all running uvicorn processes and restart only one instance          |
-| Fraud prediction always returns legitimate | Poor training dataset balance                             | Retrain the model using balanced fraud samples                            |
-| WebSocket disconnects frequently           | Backend restart or unstable connection                    | Restart backend and reconnect frontend WebSocket client                   |
-| Slow API response                          | Heavy ML prediction processing                            | Use async routes and optimize preprocessing pipeline                      |
-| Transactions not saving                    | Database session commit failure                           | Check SQLAlchemy session handling and DB connection                       |
-| Frontend API calls failing                 | Incorrect backend API URL                                 | Verify API base URL in frontend configuration                             |
-| Model accuracy is too low                  | Insufficient feature engineering                          | Improve preprocessing and retrain the ML model                            |
-| Real-time alerts not appearing             | WebSocket client not initialized                          | Ensure frontend WebSocket connection starts on page load                  |
 
-❓ FAQ
-Q: Does this work offline?
+---
+
+## 🛟 Troubleshooting
+
+| Problem | Likely Cause | Solution |
+|---|---|---|
+| Backend won't start | Port 8001 already in use | Kill it: `lsof -ti:8001 \| xargs kill -9` (Linux/macOS) or `netstat -ano \| findstr :8001` then `taskkill /PID <pid> /F` (Windows) |
+| Frontend won't start | Port 5173 already in use | Run `npm run dev -- --port 5174` to use a different port |
+| `ModuleNotFoundError` on backend start | venv not activated or install failed | Activate venv and re-run `pip install -r requirements.txt` |
+| `No module named 'xgboost'` | Dependency not installed | Run `pip install xgboost==2.0.3` inside the venv |
+| ML models not found on startup | `saved_models/` is empty or missing | Delete `saved_models/` and restart — models will retrain automatically |
+| Training hangs for > 5 minutes | Large dataset or slow CPU | Normal on first run; wait it out. Subsequent starts skip training entirely |
+| `401 Unauthorized` on all API calls | JWT token missing or expired | Log out and log back in; the token is stored in browser localStorage |
+| Login fails with correct credentials | Seed users not inserted | Ensure the backend started successfully — seed runs automatically on startup |
+| Live Feed shows no transactions | WebSocket not connected | Check browser console for WS errors; ensure backend is running on port 8001 |
+| Dashboard stats show zeros | No transactions in DB yet | Go to Settings and click **Simulate Transaction** a few times |
+| `UNIQUE constraint failed: transactions` | Duplicate `tx_id` on race condition | Safe to ignore — the constraint correctly prevents duplicate records |
+| CORS error in browser console | Frontend URL not in allowed origins | Add your frontend URL to `allow_origins` in `main.py` |
+| `422 Unprocessable Entity` from API | Request body schema mismatch | Check the request body against the API docs at `http://localhost:8001/docs` |
+| Vite build fails | Node version too old | Use Node.js 18 or later (`node --version` to check) |
+| SQLite database locked | Multiple backend processes running | Kill all uvicorn processes and restart with a single instance |
+
+---
+
+## ❓ FAQ
+
+**Q: Does this work offline?**
 Yes — after installing dependencies, the system runs entirely locally. No internet connection is required.
-Q: Where is the data stored?
-All transaction, alert, user, and model metric data is stored in backend/fraud_detection.db (SQLite). The trained ML models are in backend/ml/saved_models/. Neither is committed to git by default.
-Q: Can I reset all data and start fresh?
-Delete backend/fraud_detection.db and all .pkl files in backend/ml/saved_models/. The database and models will be recreated automatically on the next backend start.
-Q: How do I switch between XGBoost and Random Forest?
-In the frontend, go to Settings and select the model before simulating. For the API, pass model_name=xgboost or model_name=random_forest as a query parameter to /api/transactions/simulate, or include "model_name" in a manual transaction request body.
-Q: How accurate are the models?
-Performance depends on the synthetic training data. Typical results on the test split: XGBoost AUC-ROC ~0.95+, Random Forest ~0.93+. View live metrics on the Analytics page or at /api/models/metrics.
-Q: Can I use real transaction data instead of simulated data?
-Yes — use the POST /api/transactions/manual endpoint to submit real transactions, or modify backend/seed_transactions.py to load from a CSV file.
-Q: How do I add a new user role?
-Update the role column logic in backend/auth.py and backend/database.py, then add role checks to the relevant router endpoints using Depends(get_current_user).
-Q: How do I back up the data?
-Copy backend/fraud_detection.db and backend/ml/saved_models/. That's the complete data set.
-Q: Why do some simulated transactions never get flagged?
-The simulator uses an 8% fraud rate by default. Use force_fraud=true in the simulate endpoint to guarantee a fraudulent transaction, or lower the risk thresholds in backend/ml/predictor.py.
 
-🤝 Acknowledgements
+**Q: Where is the data stored?**
+All transaction, alert, user, and model metric data is stored in `backend/fraud_detection.db` (SQLite). The trained ML models are in `backend/ml/saved_models/`. Neither is committed to git by default.
 
-FastAPI — Sebastián Ramírez
-XGBoost — DMLC team
-scikit-learn — scikit-learn developers
-imbalanced-learn — SMOTE implementation
-Recharts — charting library
+**Q: Can I reset all data and start fresh?**
+Delete `backend/fraud_detection.db` and all `.pkl` files in `backend/ml/saved_models/`. The database and models will be recreated automatically on the next backend start.
 
+**Q: How do I switch between XGBoost and Random Forest?**
+In the frontend, go to **Settings** and select the model before simulating. For the API, pass `model_name=xgboost` or `model_name=random_forest` as a query parameter to `/api/transactions/simulate`, or include `"model_name"` in a manual transaction request body.
 
-📄 License
+**Q: How accurate are the models?**
+Performance depends on the synthetic training data. Typical results on the test split: XGBoost AUC-ROC ~0.95+, Random Forest ~0.93+. View live metrics on the Analytics page or at `/api/models/metrics`.
+
+**Q: Can I use real transaction data instead of simulated data?**
+Yes — use the `POST /api/transactions/manual` endpoint to submit real transactions, or modify `backend/seed_transactions.py` to load from a CSV file.
+
+**Q: How do I add a new user role?**
+Update the `role` column logic in `backend/auth.py` and `backend/database.py`, then add role checks to the relevant router endpoints using `Depends(get_current_user)`.
+
+**Q: How do I back up the data?**
+Copy `backend/fraud_detection.db` and `backend/ml/saved_models/`. That's the complete data set.
+
+**Q: Why do some simulated transactions never get flagged?**
+The simulator uses an 8% fraud rate by default. Use `force_fraud=true` in the simulate endpoint to guarantee a fraudulent transaction, or lower the risk thresholds in `backend/ml/predictor.py`.
+
+---
+
+## 🤝 Acknowledgements
+
+- [FastAPI](https://fastapi.tiangolo.com/) — Sebastián Ramírez
+- [XGBoost](https://xgboost.readthedocs.io/) — DMLC team
+- [scikit-learn](https://scikit-learn.org/) — scikit-learn developers
+- [imbalanced-learn](https://imbalanced-learn.org/) — SMOTE implementation
+- [Recharts](https://recharts.org/) — charting library
+
+---
+
+## 📄 License
+
 MIT License — free to use, modify, and distribute for personal and commercial projects.
