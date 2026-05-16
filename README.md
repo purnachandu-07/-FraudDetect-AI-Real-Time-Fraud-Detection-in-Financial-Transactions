@@ -341,16 +341,37 @@ vite ^5.3.1
 
 ---
 
-## 🤝 Acknowledgements
+🛟 Troubleshooting
+ProblemLikely CauseSolutionBackend won't startPort 8001 already in useKill it: lsof -ti:8001 | xargs kill -9 (Linux/macOS) or netstat -ano | findstr :8001 then taskkill /PID <pid> /F (Windows)Frontend won't startPort 5173 already in useRun npm run dev -- --port 5174 to use a different portModuleNotFoundError on backend startvenv not activated or install failedActivate venv and re-run pip install -r requirements.txtNo module named 'xgboost'Dependency not installedRun pip install xgboost==2.0.3 inside the venvML models not found on startupsaved_models/ is empty or missingDelete saved_models/ and restart — models will retrain automaticallyTraining hangs for > 5 minutesLarge dataset or slow CPUNormal on first run; wait it out. Subsequent starts skip training entirely401 Unauthorized on all API callsJWT token missing or expiredLog out and log back in; the token is stored in browser localStorageLogin fails with correct credentialsSeed users not insertedEnsure the backend started successfully — seed runs automatically on startupLive Feed shows no transactionsWebSocket not connectedCheck browser console for WS errors; ensure backend is running on port 8001Dashboard stats show zerosNo transactions in DB yetGo to Settings and click Simulate Transaction a few timesUNIQUE constraint failed: transactionsDuplicate tx_id on race conditionSafe to ignore — the constraint correctly prevents duplicate recordsCORS error in browser consoleFrontend URL not in allowed originsAdd your frontend URL to allow_origins in main.py422 Unprocessable Entity from APIRequest body schema mismatchCheck the request body against the API docs at http://localhost:8001/docsVite build failsNode version too oldUse Node.js 18 or later (node --version to check)SQLite database lockedMultiple backend processes runningKill all uvicorn processes and restart with a single instance
 
-- [FastAPI](https://fastapi.tiangolo.com/) — Sebastián Ramírez
-- [XGBoost](https://xgboost.readthedocs.io/) — DMLC team
-- [scikit-learn](https://scikit-learn.org/) — scikit-learn developers
-- [imbalanced-learn](https://imbalanced-learn.org/) — SMOTE implementation
-- [Recharts](https://recharts.org/) — charting library
+❓ FAQ
+Q: Does this work offline?
+Yes — after installing dependencies, the system runs entirely locally. No internet connection is required.
+Q: Where is the data stored?
+All transaction, alert, user, and model metric data is stored in backend/fraud_detection.db (SQLite). The trained ML models are in backend/ml/saved_models/. Neither is committed to git by default.
+Q: Can I reset all data and start fresh?
+Delete backend/fraud_detection.db and all .pkl files in backend/ml/saved_models/. The database and models will be recreated automatically on the next backend start.
+Q: How do I switch between XGBoost and Random Forest?
+In the frontend, go to Settings and select the model before simulating. For the API, pass model_name=xgboost or model_name=random_forest as a query parameter to /api/transactions/simulate, or include "model_name" in a manual transaction request body.
+Q: How accurate are the models?
+Performance depends on the synthetic training data. Typical results on the test split: XGBoost AUC-ROC ~0.95+, Random Forest ~0.93+. View live metrics on the Analytics page or at /api/models/metrics.
+Q: Can I use real transaction data instead of simulated data?
+Yes — use the POST /api/transactions/manual endpoint to submit real transactions, or modify backend/seed_transactions.py to load from a CSV file.
+Q: How do I add a new user role?
+Update the role column logic in backend/auth.py and backend/database.py, then add role checks to the relevant router endpoints using Depends(get_current_user).
+Q: How do I back up the data?
+Copy backend/fraud_detection.db and backend/ml/saved_models/. That's the complete data set.
+Q: Why do some simulated transactions never get flagged?
+The simulator uses an 8% fraud rate by default. Use force_fraud=true in the simulate endpoint to guarantee a fraudulent transaction, or lower the risk thresholds in backend/ml/predictor.py.
 
----
+🤝 Acknowledgements
 
-## 📄 License
+FastAPI — Sebastián Ramírez
+XGBoost — DMLC team
+scikit-learn — scikit-learn developers
+imbalanced-learn — SMOTE implementation
+Recharts — charting library
 
+
+📄 License
 MIT License — free to use, modify, and distribute for personal and commercial projects.
