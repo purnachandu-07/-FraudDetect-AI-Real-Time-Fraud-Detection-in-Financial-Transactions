@@ -338,11 +338,31 @@ lucide-react ^0.395.0
 tailwindcss ^3.4.4
 vite ^5.3.1
 ```
-
----
-
-🛟 Troubleshooting
-ProblemLikely CauseSolutionBackend won't startPort 8001 already in useKill it: lsof -ti:8001 | xargs kill -9 (Linux/macOS) or netstat -ano | findstr :8001 then taskkill /PID <pid> /F (Windows)Frontend won't startPort 5173 already in useRun npm run dev -- --port 5174 to use a different portModuleNotFoundError on backend startvenv not activated or install failedActivate venv and re-run pip install -r requirements.txtNo module named 'xgboost'Dependency not installedRun pip install xgboost==2.0.3 inside the venvML models not found on startupsaved_models/ is empty or missingDelete saved_models/ and restart — models will retrain automaticallyTraining hangs for > 5 minutesLarge dataset or slow CPUNormal on first run; wait it out. Subsequent starts skip training entirely401 Unauthorized on all API callsJWT token missing or expiredLog out and log back in; the token is stored in browser localStorageLogin fails with correct credentialsSeed users not insertedEnsure the backend started successfully — seed runs automatically on startupLive Feed shows no transactionsWebSocket not connectedCheck browser console for WS errors; ensure backend is running on port 8001Dashboard stats show zerosNo transactions in DB yetGo to Settings and click Simulate Transaction a few timesUNIQUE constraint failed: transactionsDuplicate tx_id on race conditionSafe to ignore — the constraint correctly prevents duplicate recordsCORS error in browser consoleFrontend URL not in allowed originsAdd your frontend URL to allow_origins in main.py422 Unprocessable Entity from APIRequest body schema mismatchCheck the request body against the API docs at http://localhost:8001/docsVite build failsNode version too oldUse Node.js 18 or later (node --version to check)SQLite database lockedMultiple backend processes runningKill all uvicorn processes and restart with a single instance
+## Troubleshooting
+| Problem                                    | Likely Cause                                              | Solution                                                                  |
+| ------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Backend won't start                        | Port 8001 already in use                                  | Kill the existing process using the port and restart the backend          |
+| Frontend won't start                       | Port 5173 already in use                                  | Run frontend on another port using `npm run dev -- --port 5174`           |
+| ModuleNotFoundError on backend start       | Virtual environment not activated or dependencies missing | Activate the venv and run `pip install -r requirements.txt`               |
+| No module named 'xgboost'                  | XGBoost dependency not installed                          | Run `pip install xgboost==2.0.3` inside the virtual environment           |
+| ML models not found on startup             | `saved_models/` folder missing or empty                   | Delete the folder and restart — models retrain automatically              |
+| Training hangs for more than 5 minutes     | Large dataset or slow CPU                                 | Wait during first training; later startups skip retraining                |
+| 401 Unauthorized on API calls              | JWT token missing or expired                              | Log out and log in again to refresh the token                             |
+| Login fails with correct credentials       | Seed users not inserted properly                          | Ensure backend startup completed successfully so seed data runs           |
+| Live Feed shows no transactions            | WebSocket connection failed                               | Check browser console for WebSocket errors and confirm backend is running |
+| Dashboard statistics show zero             | No transaction data available                             | Simulate transactions from the dashboard/settings panel                   |
+| UNIQUE constraint failed: transactions     | Duplicate transaction ID insertion                        | Safe to ignore — duplicate prevention is working correctly                |
+| CORS error in browser console              | Frontend URL not allowed in backend                       | Add frontend URL to `allow_origins` inside `main.py`                      |
+| 422 Unprocessable Entity                   | API request body schema mismatch                          | Verify request payload using Swagger docs at `/docs`                      |
+| Vite build fails                           | Old Node.js version                                       | Upgrade to Node.js 18 or later                                            |
+| SQLite database locked                     | Multiple backend instances running                        | Stop all running uvicorn processes and restart only one instance          |
+| Fraud prediction always returns legitimate | Poor training dataset balance                             | Retrain the model using balanced fraud samples                            |
+| WebSocket disconnects frequently           | Backend restart or unstable connection                    | Restart backend and reconnect frontend WebSocket client                   |
+| Slow API response                          | Heavy ML prediction processing                            | Use async routes and optimize preprocessing pipeline                      |
+| Transactions not saving                    | Database session commit failure                           | Check SQLAlchemy session handling and DB connection                       |
+| Frontend API calls failing                 | Incorrect backend API URL                                 | Verify API base URL in frontend configuration                             |
+| Model accuracy is too low                  | Insufficient feature engineering                          | Improve preprocessing and retrain the ML model                            |
+| Real-time alerts not appearing             | WebSocket client not initialized                          | Ensure frontend WebSocket connection starts on page load                  |
 
 ❓ FAQ
 Q: Does this work offline?
